@@ -1,0 +1,150 @@
+program runeMysteries;
+
+{$DEFINE DEBUG}
+{$I Script/script.simba}
+
+
+const
+  LUMBY_CASTLE_MAP    = '/home/noone/Simba1.3/Scripts/rune-mysteries/maps/lumby-floor1.png';
+  WIZARD_BASEMENT_MAP = '/home/noone/Simba1.3/Scripts/rune-mysteries/maps/wizard-basement-map.png';
+  WORLD_MAP           = 'world.png';
+
+var
+  Tile: TBox;
+  Bitmap: TMufasaBitmap;
+
+{$I Script/extra.simba}
+{$include_once colors.simba} // declared here for access to globals
+{$include_once positions.simba}
+{$include_once dtms.simba}
+
+label TravelDukeHoracio, InteractDukeHoracio, LeaveDukeHoracio, TravelWizard, InteractWizard, LeaveWizard, TravelAubury, InteractAubury, LeaveAubury, TravelWizard2, InteractWizard2, LeaveWizard2;
+
+begin
+  ClearDebug();
+
+  Script.Init('/usr/games/runescape --prmfile=oldschool.prm & echo -ne "\n"');
+  {$include_once player-declarations.simba}
+  Players.SetCurrent(0);
+  Script.Login();
+
+  Bitmap := GetMufasaBitmap(CreateBitmap(600, 600));
+
+  {$IFDEF DEBUG}
+    writeln('press enter to continue');
+    repeat Wait(10); until IsKeyDown(VK_ENTER);
+    writeln('continuing!');
+  {$ENDIF}
+
+  // goto InteractAubury;
+
+  TravelDukeHoracio:                       // talk to duke horacio in lumbridge castle to start quest
+    Script.WalkAnywhere(P.DukeBottomStairs);
+    ClimbDukeStairs();
+
+  InteractDukeHoracio:
+    Script.LoadMap(LUMBY_CASTLE_MAP, 3);
+    Script.Walker.WalkPath([P.DukeDoor]);
+    OpenDukeDoor();
+    Script.Walker.WalkPath([P.DukeRoom]);
+
+    if not ClickDukeHoracio(ONE_SECOND*30) then begin
+      Script.Walker.WalkPath([P.DukeDoor]);
+      OpenDukeDoor();
+      Script.Walker.WalkPath([P.DukeHallway]);
+      ClickDukeHoracio(ONE_SECOND*30);
+      DoDialogue([0, 0]);
+    end else begin
+      DoDialogue([0, 0]);
+    end;
+
+  LeaveDukeHoracio:
+    Script.LoadMap(LUMBY_CASTLE_MAP, 1); // redundant, here for debugging
+    Script.Walker.WalkPath([P.DukeDoor]);
+    OpenDukeDoor();
+    Script.Walker.WalkPath([P.DukeTopStairs]);
+    ClimbDukeStairs(ONE_SECOND*30);
+
+  TravelWizard:    // sedridor
+    Script.LoadMap(WORLD_MAP, 5);
+    Script.Walker.WebWalk(P.WizardOuterDoor);
+    OpenWizardOuterDoor();
+    Script.Walker.WalkPath([P.WizardInnerDoor]);
+    OpenWizardInnerDoor();
+    Script.Walker.WalkPath([P.WizardTopLadder]);
+    ClimbWizardLadder();
+    Mainscreen.WaitWhileLoading();
+
+  InteractWizard:
+    Script.LoadMap(WIZARD_BASEMENT_MAP, 2);       // wizard basement map colors change sometimes...
+    Script.Walker.WalkPath([P.WizardBasementDoor]);
+    OpenWizardBasementDoor();
+    Script.Walker.WalkPath([P.WizardBasementRoom]);
+    ClickWizardSedridor(ONE_SECOND*30);
+    DoDialogue([2, 0, 0]);
+
+  LeaveWizard:
+    Script.Walker.WalkPath([P.WizardBasementDoor]);
+    OpenWizardBasementDoor();
+    Script.Walker.WalkPath([P.WizardBasementLadder]);
+    ClickWizardBasementLadder(ONE_SECOND*15);
+    Mainscreen.WaitWhileLoading();
+
+    Script.LoadMap(WORLD_MAP);
+    Script.Walker.WebWalk(P.WizardInnerDoor);
+    OpenWizardInnerDoor();
+    Script.Walker.WalkPath([P.WizardOuterDoor]);
+    OpenWizardOuterDoor();
+
+  TravelAubury: // talk to aubury the runeshop guy in varrock
+    Script.LoadMap(WORLD_MAP, 5);
+    Script.Walker.WebWalk(P.AuburyDoor);
+    OpenAuburyDoor();
+    Script.Walker.WebWalk(P.AuburyShop);
+
+  InteractAubury:   // should have at least lvl 13 combat or spend a few mins in varrock so mugger doesnt mug u :)
+    ClickAubury(ONE_SECOND*30);
+    DoDialogue([2]);
+    Wait(RandomRange(555, 2555));
+    ClickAubury(ONE_SECOND*30);
+    DoDialogue([]); // repeats clickcontinue until done
+
+  LeaveAubury:
+    Script.LoadMap(WORLD_MAP, 5);
+    Script.Walker.WebWalk(P.AuburyDoor);
+    OpenAuburyDoor();
+
+  TravelWizard2:    // sedridor
+    Script.LoadMap(WORLD_MAP, 5);
+    Script.Walker.WebWalk(P.WizardOuterDoor);
+    OpenWizardOuterDoor();
+    Script.Walker.WalkPath([P.WizardInnerDoor]);
+    OpenWizardInnerDoor();
+    Script.Walker.WalkPath([P.WizardTopLadder]);
+    ClimbWizardLadder();
+    Mainscreen.WaitWhileLoading();
+
+  InteractWizard2:
+    Script.LoadMap(WIZARD_BASEMENT_MAP, 2);       // wizard basement map colors change sometimes...
+    Script.Walker.WalkPath([P.WizardBasementDoor]);
+    OpenWizardBasementDoor();
+    Script.Walker.WalkPath([P.WizardBasementRoom]);
+    ClickWizardSedridor(ONE_SECOND*30);
+    DoDialogue([]);
+
+  LeaveWizard2:
+    Script.Walker.WalkPath([P.WizardBasementDoor]);
+    OpenWizardBasementDoor();
+    Script.Walker.WalkPath([P.WizardBasementLadder]);
+    ClickWizardBasementLadder(ONE_SECOND*15);
+    Mainscreen.WaitWhileLoading();
+
+    Script.LoadMap(WORLD_MAP);
+    Script.Walker.WebWalk(P.WizardInnerDoor);
+    OpenWizardInnerDoor();
+    Script.Walker.WalkPath([P.WizardOuterDoor]);
+    OpenWizardOuterDoor();
+
+  writeln('done, waiting...');
+  Wait(ONE_SECOND*15);
+end.

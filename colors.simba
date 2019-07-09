@@ -1,0 +1,226 @@
+// duke door color: CTS2(3825792, 14, 0.32, 1.04)
+// duke top-of-door color: CTS2(2311269, 3, 0.11, 0.58)
+// duke horacio opened door finder coords: 163, 122 & 163, 117
+// duke horacio closed door finder coords: 159, 117 & 163, 117 & face approximately east (or west?)
+
+
+type TColors = record // color constants type
+    DukeDoorTop, DukeDoor, DukeHoracio, DukeStairs, WizardBasementLadder, WizardSedridor, Aubury, AuburyDoorInside: TCTS2Color;
+  end;
+
+var
+  C: TColors; // color constants
+
+// init colors
+begin
+  C.DukeDoor             := CTS2( 3825792, 14, 0.32, 1.04);
+  C.DukeDoorTop          := CTS2( 2311269,  3, 0.11, 0.58);
+  C.DukeHoracio          := CTS2( 6228998,  9, 0.18, 1.48);
+  C.DukeStairs           := CTS2( 4277835,  5, 0.87, 1.09);
+
+  C.WizardBasementLadder := CTS2( 1917526,  9, 0.16, 0.39);
+  C.WizardSedridor       := CTS2(12876557, 23, 0.02, 0.41);
+
+  C.Aubury               := CTS2(10067620, 19, 0.49, 0.12);
+  C.AuburyDoorInside     := CTS2( 2837334,  4, 0.16, 1.79);
+end;
+
+// searches for colors in rswalker tiles.  tiles are picked using map coords
+function GetColorsInTiles(tileCoords: TPointArray; color: TCTS2Color; cluster: Integer; filterSize: TIntegerArray): T2DPointArray;   // find color in tiles would be a useful fn
+var
+  p: TPoint;
+  tiles: TBoxArray;
+  tile, searchArea: Tbox;
+  atpa: T2DPointArray;
+  tpa: TPointArray;
+
+begin
+  for p in tileCoords do begin
+    tile := Script.Walker.GetTileMS(p).Bounds();
+    tiles.Append(tile);
+  end;
+
+  searchArea := tiles.Merge();
+
+  if SRL.FindColors(tpa, color, searchArea) then begin
+    atpa := tpa.Cluster(cluster);
+    atpa.filterSize(filterSize[0], filterSize[1]);
+    Result := atpa;
+  end;
+
+  {$IFDEF DEBUG}
+    Bitmap.FromClient();
+    Bitmap.DrawBox(searchArea, $FFFFFF);
+    Bitmap.DrawATPA(atpa);
+    Bitmap.UpdateDebugImage();
+  {$ENDIF}
+end;
+
+function FindColorsInTiles(tileCoords: TPointArray; color: TCTS2Color; cluster: Integer; filterSize: TIntegerArray): Boolean;
+begin
+  Result := Length(GetColorsInTiles(tileCoords, color, cluster, filterSize)) > 0;
+end;
+
+function HoverObjectInTile(tileCoords: TPointArray; color: TCTS2Color; cluster: Integer; filterSize: TIntegerArray; uptext: String): Boolean;
+var
+  tpa: TPointArray;
+  atpa: T2DPointArray;
+begin
+  atpa := GetColorsInTiles(tileCoords, color, cluster, filterSize);
+  for tpa in atpa do begin
+    Mouse.Move(tpa[Random(Length(tpa))]);
+    if Mainscreen.IsUpText(uptext) then begin
+      Result := True;
+      Break;
+    end;
+  end;
+end;
+
+// determine if door to duke horacios room is open or closed using its rswalker position and color
+// open door if necessary
+function FindDukeDoorClosed(): Boolean;
+begin
+  Minimap.SetCompassAngle(270 + RandomRange(-10, 10), True); // face east
+  Wait(Random(100));
+  Result := FindColorsInTiles([Point(159, 117), Point(163, 117)], C.DukeDoorTop, 3, [80, 500]); // uptext doesnt matter rn
+end;
+
+function FindDukeDoorOpen(): Boolean;
+begin
+  Minimap.SetCompassAngle(0 + RandomRange(-10, 10), True);
+  Wait(Random(100));
+  Result := FindColorsInTiles([Point(163, 122), Point(163, 117)], C.DukeDoorTop, 3, [80, 500]);
+end;
+
+function OpenDukeDoor(): Boolean;
+begin
+  Result := False;
+  if FindDukeDoorClosed() then begin  // this also sets camera facing east, which is good for finding the plain ole door color
+    writeln('door is closed...');
+    if HoverObjectInTile([Point(163, 122), Point(163, 117), Point(169, 117)], C.DukeDoor, 3, [100, 1500], 'Open Door') then begin
+      if Mouse.Click(ctRed) then begin
+        writeln('opened door!');
+        Result := True;
+        Exit;
+      end;
+    end;
+  end else if FindDukeDoorOpen() then begin
+    Result := True;
+    writeln('door was open');
+    Exit;
+  end else begin
+    writeln('OpenDukeDoor() failed!');
+  end;
+end;
+
+function ClickDukeHoracio(timeout: Integer = 5000): Boolean;
+var
+  T: TCountdown;
+begin
+  Result := False;
+  T.Init(timeout);
+
+  while not HoverColors(C.DukeHoracio, 3, [100, 800], 'Duke', Mainscreen.GetBounds()) do begin
+    if T.IsFinished() then begin
+      Exit(False);
+    end;
+  end;
+
+  Result := Mouse.Click(ctRed);
+end;
+
+function ClimbDukeStairs(timeout: Integer = 5000): Boolean;     // climbs up and down first level
+var
+  T: TCountdown;
+begin
+  Result := False;
+  T.Init(timeout);
+
+  repeat
+    if HoverColors(C.DukeStairs, 1, [500, 5000], 'Climb-up', Mainscreen.GetBounds()) then begin
+      Wait(RandomRange(20, 100));
+      if Mouse.Click(ctRed) then begin
+        writeln('climbing up staircase');
+        Exit(True);
+      end;
+    end else if HoverColors(C.DukeStairs, 1, [500, 5000], 'Climb', Mainscreen.GetBounds()) then begin
+      Wait(RandomRange(20, 100));
+      if ChooseOption.Open() and ChooseOption.Select('Climb-down Staircase') then begin
+        writeln('climbing down staircase');
+        Exit(True);
+      end;
+    end;
+  until (not Result or T.IsFinished());
+end;
+
+function ClickWizardBasementLadder(timeout: Integer = 5000): Boolean;
+var
+  T: TCountdown;
+begin
+  Result := False;
+  T.Init(timeout);
+
+  while not HoverColors(C.WizardBasementLadder, 4, [150, 1500], 'Ladder', Mainscreen.GetBounds()) do begin
+    if T.IsFinished() then begin
+      Exit(False);
+    end;
+  end;
+
+  Result := Mouse.Click(ctRed);
+end;
+
+function ClickWizardSedridor(timeout: Integer = 5000): Boolean;
+var
+  T: TCountdown;
+begin
+  Result := False;
+  T.Init(timeout);
+
+  while not HoverColors(C.WizardSedridor, 3, [100, 800], 'Sedridor', Mainscreen.GetBounds()) do begin
+    if T.IsFinished() then begin
+      Exit(False);
+    end;
+  end;
+
+  Result := Mouse.Click(ctRed);
+end;
+
+
+function ClickAubury(timeout: Integer = 5000): Boolean;
+var
+  T: TCountdown;
+begin
+  Result := False;
+  T.Init(timeout);
+
+  while not HoverColors(C.Aubury, 3, [100, 1000], 'Talk-to Aubury', Mainscreen.GetBounds()) do begin
+    if T.IsFinished() then begin
+      Exit(False);
+    end;
+  end;
+
+  // Wait(RandomRange(25, 150));
+  Result := Mouse.Click(ctRed);
+end;
+
+
+function FindAuburyDoorClosed(): Boolean;
+begin
+  Minimap.SetCompassAngle(180 + RandomRange(-10, 10), True); // face south
+  Wait(Random(100));
+  Result := FindColorsInTiles([Point(4821, 2852), Point(4821, 2856)], C.AuburyDoorInside, 3, [150, 1000]); // uptext doesnt matter rn
+end;
+
+function OpenAuburyDoor(): Boolean;
+begin
+  Result := False;
+  if FindAuburyDoorClosed() then begin  // this also sets camera facing south, which is good for finding the inside of the door if it is closed
+    if HoverObjectInTile([Point(4817, 2852), Point(4821, 2852), Point(4821, 2856)], C.AuburyDoorInside, 4, [50, 1500], 'Open Door') then begin
+      if Mouse.Click(ctRed) then begin
+        Exit(True);
+      end;
+    end;
+  end;
+end;
+
+

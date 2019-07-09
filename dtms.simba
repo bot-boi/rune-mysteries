@@ -1,0 +1,121 @@
+// vim: set syntax=delphi:
+type TDTMs = record
+    WizardBasementDoorClosed, WizardTowerLadder, WizardTowerInnerDoorClosed, WizardTowerOuterDoorClosed: Integer;
+  end;
+
+var
+  DTMs: TDTMs;
+
+begin
+  DTMs.WizardBasementDoorClosed   := DTMFromString('mQwAAAHicY2ZgYJBnROCpQH4REG8C4hg3UQYbEwYGJ0sGBi4GBEYDAKOXA90=');
+  DTMs.WizardTowerInnerDoorClosed := DTMFromString('mQwAAAHicY2ZgYNjLyMBwDogXA7EfECcDsTkQ1yZYMnRPmMbQP2UWAxdQnREUowEATqUIEg==');
+  DTMs.WizardTowerLadder          := DTMFromString('mLgAAAHicY2JgYMhkZGCIBmIHILYBYjcTCQZRQUEGEaAcFwMyAABERQIu');
+  DTMs.WizardTowerOuterDoorClosed := DTMFromString('mQwAAAHicY2ZgYPgPxNKMDAyPgfRGIN4ApbtzHBimzJwPxqxAPgyjAQB7Ggjy');
+end;
+
+// opens the door leading to the altar in the wizard tower basement
+function OpenWizardBasementDoor(): Boolean;
+var
+  TPA: TPointArray;
+  p: TPoint;
+  b: TBox; // bounds
+begin
+  Result := False;
+  b := Mainscreen.GetBounds();
+  Mainscreen.SetAngle(True);
+  Minimap.SetCompassAngle(0);
+
+  FindDTMs(DTMs.WizardBasementDoorClosed, TPA, b.X1, b.Y1, b.X2, b.Y2);
+  Mouse.Move(MedianTPA(TPA));
+  if Mainscreen.IsUpText('Open Door') then begin
+    if Mouse.Click(ctRed) then begin
+        Result := True;
+      end;
+  end;
+  {$IFDEF DEBUG}
+    Script.DebugTPA(TPA);
+  {$ENDIF}
+  Wait(RandomRange(500, 1500));
+end;
+
+// opens outer door to wizard tower
+function OpenWizardInnerDoor(): Boolean;
+var
+  TPA: TPointArray;
+  p: TPoint;
+  b: TBox; // bounds
+begin
+  Result := False;
+  b := Mainscreen.GetBounds();
+  Mainscreen.SetAngle(True);
+  Minimap.SetCompassAngle(0);
+
+  FindDTMs(DTMs.WizardTowerInnerDoorClosed, TPA, b.X1, b.Y1, b.X2, b.Y2);
+  Mouse.Move(MedianTPA(TPA));
+  if Mainscreen.IsUpText('Open Door') then begin
+    if Mouse.Click(ctRed) then begin
+        Result := True;
+      end;
+  end;
+  {$IFDEF DEBUG}
+    Script.DebugTPA(TPA);
+  {$ENDIF}
+  Wait(RandomRange(500, 1500));
+end;
+
+// climbs up or down the ladder to the wizard tower basement
+function ClimbWizardLadder(): Boolean;
+var
+  TPA: TPointArray;
+  p: TPoint;
+  b: TBox; // bounds
+begin
+  Result := False;
+  b := Mainscreen.GetBounds();
+  Mainscreen.SetAngle(True);
+  Minimap.SetCompassAngle(0);
+
+  FindDTMs(DTMs.WizardTowerLadder, TPA, b.X1, b.Y1, b.X2, b.Y2);
+
+  {$IFDEF DEBUG}
+    Script.DebugTPA(TPA);
+  {$ENDIF}
+
+  for p in TPA do begin
+    Mouse.Move(p);
+    if Mainscreen.IsUpText('Ladder') then begin
+      if Mouse.Click(ctRed) then begin
+        Result := True;
+        Break;
+      end;
+    end;
+  end;
+  Wait(RandomRange(500, 1500));
+end;
+
+// opens outer door to wizard tower
+function OpenWizardOuterDoor(): Boolean;
+var
+  TPA: TPointArray;
+  p: TPoint;
+  b: TBox; // bounds
+begin
+  Result := False;
+  b := Mainscreen.GetBounds();
+  Mainscreen.SetAngle(True);
+  Minimap.SetCompassAngle(0);
+
+  FindDTMs(DTMs.WizardTowerOuterDoorClosed, TPA, b.X1, b.Y1, b.X2, b.Y2);
+  Mouse.Move(MedianTPA(TPA));
+  if Mainscreen.IsUpText('Open Door') then begin
+    if Mouse.Click(ctRed) then begin
+        Result := True;
+      end;
+  end;
+  {$IFDEF DEBUG}
+    Script.DebugTPA(TPA);
+  {$ENDIF}
+  Wait(RandomRange(500, 1500));
+end;
+
+

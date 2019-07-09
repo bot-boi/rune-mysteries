@@ -1,0 +1,27 @@
+
+type TPositions = record
+    DukeBottomStairs, DukeDoor, DukeHallway, DukeRoom, DukeTopStairs, WizardInnerDoor, WizardOuterDoor, WizardBasementDoor, WizardBasementLadder, WizardBasementRoom, WizardTopLadder, AuburyDoor, AuburyShop: TPoint;
+  end;
+
+var
+  P: TPositions;
+
+begin
+  P.DukeBottomStairs     := Point(4634, 3536);
+  P.DukeDoor             := Point( 161,  120);
+  P.DukeHallway          := Point( 155,  131); // in case duke got out of room or something
+  P.DukeRoom             := Point( 175,  122);
+  P.DukeTopStairs        := Point( 153,   94);
+
+  P.WizardInnerDoor      := Point(4238, 3800);
+  P.WizardOuterDoor      := Point(4246, 3780);
+  P.WizardBasementDoor   := Point( 318,  298);
+  P.WizardBasementLadder := Point( 302,  273);
+  P.WizardBasementRoom   := Point( 294,  297);
+  P.WizardTopLadder      := Point(4227, 3799);
+
+  P.AuburyDoor           := Point(4821, 2854);
+  P.AuburyShop           := Point(4820, 2843);
+
+  // RSW_Graph.AddNode(P.DukeBottomStairs, -1);
+end;
