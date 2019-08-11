@@ -25,71 +25,20 @@ begin
   C.AuburyDoorInside     := CTS2( 2837334,  4, 0.16, 1.79);
 end;
 
-// searches for colors in rswalker tiles.  tiles are picked using map coords
-function GetColorsInTiles(tileCoords: TPointArray; color: TCTS2Color; cluster: Integer; filterSize: TIntegerArray): T2DPointArray;   // find color in tiles would be a useful fn
-var
-  p: TPoint;
-  tiles: TBoxArray;
-  tile, searchArea: Tbox;
-  atpa: T2DPointArray;
-  tpa: TPointArray;
-
-begin
-  for p in tileCoords do begin
-    tile := Script.Walker.GetTileMS(p).Bounds();
-    tiles.Append(tile);
-  end;
-
-  searchArea := tiles.Merge();
-
-  if SRL.FindColors(tpa, color, searchArea) then begin
-    atpa := tpa.Cluster(cluster);
-    atpa.filterSize(filterSize[0], filterSize[1]);
-    Result := atpa;
-  end;
-
-  {$IFDEF DEBUG}
-    Bitmap.FromClient();
-    Bitmap.DrawBox(searchArea, $FFFFFF);
-    Bitmap.DrawATPA(atpa);
-    Bitmap.UpdateDebugImage();
-  {$ENDIF}
-end;
-
-function FindColorsInTiles(tileCoords: TPointArray; color: TCTS2Color; cluster: Integer; filterSize: TIntegerArray): Boolean;
-begin
-  Result := Length(GetColorsInTiles(tileCoords, color, cluster, filterSize)) > 0;
-end;
-
-function HoverObjectInTile(tileCoords: TPointArray; color: TCTS2Color; cluster: Integer; filterSize: TIntegerArray; uptext: String): Boolean;
-var
-  tpa: TPointArray;
-  atpa: T2DPointArray;
-begin
-  atpa := GetColorsInTiles(tileCoords, color, cluster, filterSize);
-  for tpa in atpa do begin
-    Mouse.Move(tpa[Random(Length(tpa))]);
-    if Mainscreen.IsUpText(uptext) then begin
-      Result := True;
-      Break;
-    end;
-  end;
-end;
-
 // determine if door to duke horacios room is open or closed using its rswalker position and color
 // open door if necessary
 function FindDukeDoorClosed(): Boolean;
 begin
   Minimap.SetCompassAngle(270 + RandomRange(-10, 10), True); // face east
   Wait(Random(100));
-  Result := FindColorsInTiles([Point(159, 117), Point(163, 117)], C.DukeDoorTop, 3, [80, 500]); // uptext doesnt matter rn
+  Result := FindColorsInTiles([Point(159, 117), Point(163, 117)], C.DukeDoorTop, 3, [80, 500], True); // uptext doesnt matter rn
 end;
 
 function FindDukeDoorOpen(): Boolean;
 begin
   Minimap.SetCompassAngle(0 + RandomRange(-10, 10), True);
   Wait(Random(100));
-  Result := FindColorsInTiles([Point(163, 122), Point(163, 117)], C.DukeDoorTop, 3, [80, 500]);
+  Result := FindColorsInTiles([Point(163, 122), Point(163, 117)], C.DukeDoorTop, 3, [80, 500], True);
 end;
 
 function OpenDukeDoor(): Boolean;
@@ -97,10 +46,11 @@ begin
   Result := False;
   if FindDukeDoorClosed() then begin  // this also sets camera facing east, which is good for finding the plain ole door color
     writeln('door is closed...');
-    if HoverObjectInTile([Point(163, 122), Point(163, 117), Point(169, 117)], C.DukeDoor, 3, [100, 1500], 'Open Door') then begin
+    if HoverObjectInTile([Point(163, 122), Point(163, 117), Point(169, 117)], C.DukeDoor, 3, [100, 1500], 'Open Door', True) then begin
       if Mouse.Click(ctRed) then begin
         writeln('opened door!');
         Result := True;
+        Wait(RandomRange(ONE_SECOND*2, ONE_SECOND*4));
         Exit;
       end;
     end;
@@ -109,7 +59,7 @@ begin
     writeln('door was open');
     Exit;
   end else begin
-    writeln('OpenDukeDoor() failed!');
+    writeln('OpenDukeDoor() failed?');
   end;
 end;
 
@@ -208,14 +158,14 @@ function FindAuburyDoorClosed(): Boolean;
 begin
   Minimap.SetCompassAngle(180 + RandomRange(-10, 10), True); // face south
   Wait(Random(100));
-  Result := FindColorsInTiles([Point(4821, 2852), Point(4821, 2856)], C.AuburyDoorInside, 3, [150, 1000]); // uptext doesnt matter rn
+  Result := FindColorsInTiles([Point(4821, 2852), Point(4821, 2856)], C.AuburyDoorInside, 3, [150, 1000], True); // uptext doesnt matter rn
 end;
 
 function OpenAuburyDoor(): Boolean;
 begin
   Result := False;
   if FindAuburyDoorClosed() then begin  // this also sets camera facing south, which is good for finding the inside of the door if it is closed
-    if HoverObjectInTile([Point(4817, 2852), Point(4821, 2852), Point(4821, 2856)], C.AuburyDoorInside, 4, [50, 1500], 'Open Door') then begin
+    if HoverObjectInTile([Point(4817, 2852), Point(4821, 2852), Point(4821, 2856)], C.AuburyDoorInside, 4, [50, 1500], 'Open Door', True) then begin
       if Mouse.Click(ctRed) then begin
         Exit(True);
       end;

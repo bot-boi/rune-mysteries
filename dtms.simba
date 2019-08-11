@@ -24,6 +24,8 @@ begin
   b := Mainscreen.GetBounds();
   Mainscreen.SetAngle(True);
   Minimap.SetCompassAngle(0);
+  Wait(Random(500));
+  Minimap.SetCompassAngle(0);
 
   FindDTMs(DTMs.WizardBasementDoorClosed, TPA, b.X1, b.Y1, b.X2, b.Y2);
   Mouse.Move(MedianTPA(TPA));
@@ -49,6 +51,8 @@ begin
   b := Mainscreen.GetBounds();
   Mainscreen.SetAngle(True);
   Minimap.SetCompassAngle(0);
+  Wait(Random(500));
+  Minimap.SetCompassAngle(0);
 
   FindDTMs(DTMs.WizardTowerInnerDoorClosed, TPA, b.X1, b.Y1, b.X2, b.Y2);
   Mouse.Move(MedianTPA(TPA));
@@ -73,6 +77,8 @@ begin
   Result := False;
   b := Mainscreen.GetBounds();
   Mainscreen.SetAngle(True);
+  Minimap.SetCompassAngle(0);
+  Wait(Random(500));
   Minimap.SetCompassAngle(0);
 
   FindDTMs(DTMs.WizardTowerLadder, TPA, b.X1, b.Y1, b.X2, b.Y2);
@@ -103,6 +109,8 @@ begin
   Result := False;
   b := Mainscreen.GetBounds();
   Mainscreen.SetAngle(True);
+  Minimap.SetCompassAngle(0);
+  Wait(Random(500));
   Minimap.SetCompassAngle(0);
 
   FindDTMs(DTMs.WizardTowerOuterDoorClosed, TPA, b.X1, b.Y1, b.X2, b.Y2);

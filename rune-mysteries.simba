@@ -11,7 +11,7 @@ const
 
 var
   Tile: TBox;
-  Bitmap: TMufasaBitmap;
+  // Bitmap: TMufasaBitmap;
 
 {$I Script/extra.simba}
 {$include_once colors.simba} // declared here for access to globals
@@ -36,11 +36,14 @@ begin
     writeln('continuing!');
   {$ENDIF}
 
-  // goto InteractAubury;
+  // goto TravelAubury;
 
-  TravelDukeHoracio:                       // talk to duke horacio in lumbridge castle to start quest
-    Script.WalkAnywhere(P.DukeBottomStairs);
+  TravelDukeHoracio:
+    Script.LoadMap('world.png', 4);                       // talk to duke horacio in lumbridge castle to start quest
+    // Script.WalkAnywhere(P.DukeBottomStairs);
+    TravelTo(P.DukeBottomStairs, 4);
     ClimbDukeStairs();
+    Wait(RandomRange(ONE_SECOND*2, ONE_SECOND*4));
 
   InteractDukeHoracio:
     Script.LoadMap(LUMBY_CASTLE_MAP, 3);
@@ -81,6 +84,7 @@ begin
     OpenWizardBasementDoor();
     Script.Walker.WalkPath([P.WizardBasementRoom]);
     ClickWizardSedridor(ONE_SECOND*30);
+    Wait(RandomRange(ONE_SECOND*2, ONE_SECOND*4)); // shoulda had these waits to begin with wtf
     DoDialogue([2, 0, 0]);
 
   LeaveWizard:
@@ -103,6 +107,7 @@ begin
     Script.Walker.WebWalk(P.AuburyShop);
 
   InteractAubury:   // should have at least lvl 13 combat or spend a few mins in varrock so mugger doesnt mug u :)
+    Wait(RandomRange(ONE_SECOND*2, ONE_SECOND*4)); // shoulda had these waits to begin with wtf
     ClickAubury(ONE_SECOND*30);
     DoDialogue([2]);
     Wait(RandomRange(555, 2555));
